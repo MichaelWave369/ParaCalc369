@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { TOOL_EVENTS } from './toolDockEvents.js';
 
 const SHORTCUTS = [
   ['/', 'Focus the main calculator input'],
@@ -21,6 +22,12 @@ function focusExpression() {
 export default function KeyboardHelp() {
   const [open, setOpen] = useState(false);
   const closeRef = useRef(null);
+
+  useEffect(() => {
+    const openFromDock = () => setOpen(true);
+    window.addEventListener(TOOL_EVENTS.help, openFromDock);
+    return () => window.removeEventListener(TOOL_EVENTS.help, openFromDock);
+  }, []);
 
   useEffect(() => {
     const onKey = (event) => {

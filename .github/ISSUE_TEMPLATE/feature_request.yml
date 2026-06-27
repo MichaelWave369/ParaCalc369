@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest an improvement for ParaCalc369
+title: "Feature: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or need
+      description: What would this help with?
+      placeholder: I want to...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should the app do?
+      placeholder: Add a mode/button/setting that...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Calculator
+        - Graph mode
+        - Unit converter
+        - Formula Library
+        - History Vault
+        - PWA/offline
+        - Documentation
+        - Other
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      placeholder: Links, sketches, examples, or extra context.

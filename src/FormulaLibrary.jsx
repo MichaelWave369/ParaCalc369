@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CONSTANTS, FORMULA_SECTIONS, searchFormulas } from './formulaLibrary.js';
-import { TOOL_EVENTS } from './toolDockEvents.js';
+import { insertExpression, TOOL_EVENTS } from './toolDockEvents.js';
 
 export default function FormulaLibrary() {
   const [open, setOpen] = useState(false);
@@ -23,6 +23,12 @@ export default function FormulaLibrary() {
     }
   }
 
+  function useExample(example, label) {
+    insertExpression(example);
+    setStatus(`${label} example inserted.`);
+    setOpen(false);
+  }
+
   return (
     <>
       <button className="formula-fab" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} aria-label="Open formula library">f</button>
@@ -38,13 +44,13 @@ export default function FormulaLibrary() {
             </header>
 
             <label className="formula-search">
-              <span>Search</span>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="geometry, force, interest, Celsius" />
+              <span>Search formulas, tags, or sections</span>
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="algebra, tangent, variance, ohm, Celsius" />
             </label>
 
             <section className="constant-strip" aria-label="Constants">
               {CONSTANTS.map((constant) => (
-                <button key={constant.symbol} onClick={() => copy(constant.value, constant.name)} title={constant.note}>
+                <button key={constant.symbol} onClick={() => useExample(constant.value, constant.name)} onDoubleClick={() => copy(constant.value, constant.name)} title={`${constant.note} Click to use, double-click to copy.`}>
                   <strong>{constant.symbol}</strong>
                   <span>{constant.value}</span>
                 </button>
@@ -53,14 +59,14 @@ export default function FormulaLibrary() {
 
             {query ? (
               <div className="formula-list">
-                {results.map((item) => <FormulaCard key={`${item.section}-${item.name}`} item={item} copy={copy} />)}
+                {results.map((item) => <FormulaCard key={`${item.section}-${item.name}`} item={item} copy={copy} useExample={useExample} />)}
               </div>
             ) : (
               FORMULA_SECTIONS.map((section) => (
                 <section className="formula-section" key={section.id}>
                   <h3>{section.label}</h3>
                   <div className="formula-list">
-                    {section.formulas.map((item) => <FormulaCard key={item.name} item={{ ...item, section: section.label }} copy={copy} />)}
+                    {section.formulas.map((item) => <FormulaCard key={item.name} item={{ ...item, section: section.label }} copy={copy} useExample={useExample} />)}
                   </div>
                 </section>
               ))
@@ -74,7 +80,7 @@ export default function FormulaLibrary() {
   );
 }
 
-function FormulaCard({ item, copy }) {
+function FormulaCard({ item, copy, useExample }) {
   const text = `${item.name}: ${item.formula}. Example: ${item.example}. ${item.note}`;
   return (
     <article className="formula-card">
@@ -84,8 +90,12 @@ function FormulaCard({ item, copy }) {
         <code>{item.formula}</code>
         <p>Example: <code>{item.example}</code></p>
         <p>{item.note}</p>
+        {item.tags?.length ? <div className="formula-tags">{item.tags.map((tag) => <small key={tag}>{tag}</small>)}</div> : null}
       </div>
-      <button onClick={() => copy(text, item.name)}>Copy</button>
+      <div className="formula-actions">
+        <button onClick={() => useExample(item.example, item.name)}>Use example</button>
+        <button onClick={() => copy(text, item.name)}>Copy</button>
+      </div>
     </article>
   );
 }

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { calculate, fmt } from './calc.js';
 import { friendlyErrorMessage } from './errorMessages.js';
+import { graphCaption, resolveYRange } from './graphUtils.js';
 import UnitConverter from './UnitConverter.jsx';
 import { readSharedState } from './shareState.js';
 
 const STORE = 'paracalc369.history.v1';
 const THEME_STORE = 'paracalc369.theme.v1';
 const SHARED = readSharedState();
+
+const TAU = Math.PI * 2;
 
 const KEYS = [
   ['AC', 'C', '⌫', 'Copy', 'DEG/RAD'],
@@ -21,9 +24,10 @@ const KEYS = [
 ];
 
 const GRAPH_PRESETS = [
-  { label: 'sin', fn: 'sin(x)', min: -10, max: 10 },
+  { label: 'sin rad', fn: 'sin(x)', min: -TAU, max: TAU },
+  { label: 'cos rad', fn: 'cos(x)', min: -TAU, max: TAU },
+  { label: 'wave rad', fn: 'sin(x)+cos(2x)', min: -TAU, max: TAU },
   { label: 'x²', fn: 'x^2', min: -10, max: 10 },
-  { label: 'wave', fn: 'sin(x)+cos(2x)', min: -10, max: 10 },
   { label: 'cubic', fn: 'x^3 - 4x', min: -4, max: 4 },
   { label: 'log', fn: 'log(x)', min: 0.1, max: 10 },
   { label: 'sqrt', fn: 'sqrt(x)', min: 0, max: 10 },
@@ -63,18 +67,6 @@ function label(k, mode, theme) {
   return k;
 }
 
-function niceRange(values) {
-  const finite = values.filter(Number.isFinite).sort((a, b) => a - b);
-  if (!finite.length) return [-10, 10];
-  const lowIndex = Math.floor(finite.length * 0.02);
-  const highIndex = Math.ceil(finite.length * 0.98) - 1;
-  const min = finite[Math.max(0, lowIndex)];
-  const max = finite[Math.min(finite.length - 1, highIndex)];
-  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return [min - 1, max + 1];
-  const pad = Math.max((max - min) * 0.12, 1e-6);
-  return [min - pad, max + pad];
-}
-
 function drawGraph(canvas, points, yRange, theme) {
   const ctx = canvas.getContext('2d');
   const width = canvas.clientWidth || 640;
@@ -109,6 +101,18 @@ function drawGraph(canvas, points, yRange, theme) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
   }
 
+  ctx.fillStyle = text;
+  ctx.font = '700 10px system-ui, sans-serif';
+  for (let i = 0; i <= 4; i += 1) {
+    const xValue = xMin + ((xMax - xMin) * i) / 4;
+    const x = Math.min(width - 54, Math.max(4, xToPx(xValue) + 4));
+    ctx.fillText(fmt(xValue), x, height - 5);
+
+    const yValue = yMin + ((yMax - yMin) * i) / 4;
+    const y = Math.min(height - 8, Math.max(14, yToPx(yValue) - 4));
+    ctx.fillText(fmt(yValue), 8, y);
+  }
+
   ctx.strokeStyle = axis;
   if (xMin <= 0 && xMax >= 0) { const x0 = xToPx(0); ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, height); ctx.stroke(); }
   if (yMin <= 0 && yMax >= 0) { const y0 = yToPx(0); ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(width, y0); ctx.stroke(); }
@@ -126,41 +130,39 @@ function drawGraph(canvas, points, yRange, theme) {
     else ctx.lineTo(x, y);
   }
   if (open) ctx.stroke();
-
-  ctx.fillStyle = text;
-  ctx.font = '700 12px system-ui, sans-serif';
-  ctx.fillText(`x ${fmt(xMin)} → ${fmt(xMax)}`, 12, height - 14);
-  ctx.fillText(`y ${fmt(yMin)} → ${fmt(yMax)}`, 12, 22);
 }
 
-function GraphPanel({ angleMode, ans, theme }) {
+function GraphPanel({ ans, theme }) {
   const canvasRef = useRef(null);
   const [fn, setFn] = useState(SHARED.graph.fn || 'sin(x)');
-  const [xMin, setXMin] = useState(SHARED.graph.min || '-10');
-  const [xMax, setXMax] = useState(SHARED.graph.max || '10');
+  const [xMin, setXMin] = useState(SHARED.graph.min || fmt(-TAU));
+  const [xMax, setXMax] = useState(SHARED.graph.max || fmt(TAU));
+  const [yMinText, setYMinText] = useState('');
+  const [yMaxText, setYMaxText] = useState('');
+  const [graphAngleMode, setGraphAngleMode] = useState('rad');
   const [graphStatus, setGraphStatus] = useState(SHARED.graph.fn ? 'Loaded from shared URL' : 'Ready to plot.');
   const [points, setPoints] = useState([]);
   const [yRange, setYRange] = useState([-1, 1]);
 
-  function plot(expression = fn, minValue = Number(xMin), maxValue = Number(xMax)) {
+  function plot(expression = fn, minValue = Number(xMin), maxValue = Number(xMax), manualYMin = yMinText, manualYMax = yMaxText, modeValue = graphAngleMode) {
     try {
       const min = Number(minValue);
       const max = Number(maxValue);
       if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) throw Error('Use a valid x range.');
-      const samples = 560;
+      const samples = 640;
       const next = [];
       for (let i = 0; i < samples; i += 1) {
         const x = min + ((max - min) * i) / (samples - 1);
         let y = NaN;
-        try { y = calculate(expression, { angleMode, ans, variables: { x } }); } catch { y = NaN; }
+        try { y = calculate(expression, { angleMode: modeValue, ans, variables: { x } }); } catch { y = NaN; }
         next.push({ x, y });
       }
       const finiteYs = next.map((p) => p.y).filter(Number.isFinite);
       if (!finiteYs.length) throw Error('No plottable points in this range.');
-      const yr = niceRange(finiteYs);
+      const resolved = resolveYRange(finiteYs, manualYMin, manualYMax);
       setPoints(next);
-      setYRange(yr);
-      setGraphStatus(`Plotted ${finiteYs.length}/${samples} points in ${angleMode.toUpperCase()} mode.`);
+      setYRange(resolved.range);
+      setGraphStatus(`Plotted ${finiteYs.length}/${samples} points in ${modeValue.toUpperCase()} mode with ${resolved.mode} Y range.`);
     } catch (e) {
       setGraphStatus(friendlyErrorMessage(e));
       setPoints([]);
@@ -169,8 +171,8 @@ function GraphPanel({ angleMode, ans, theme }) {
 
   function applyPreset(preset) {
     setFn(preset.fn);
-    setXMin(String(preset.min));
-    setXMax(String(preset.max));
+    setXMin(fmt(preset.min));
+    setXMax(fmt(preset.max));
     plot(preset.fn, preset.min, preset.max);
   }
 
@@ -188,18 +190,51 @@ function GraphPanel({ angleMode, ans, theme }) {
   }
 
   function resetRange() {
-    setXMin('-10');
-    setXMax('10');
-    plot(fn, -10, 10);
+    setXMin(fmt(-TAU));
+    setXMax(fmt(TAU));
+    plot(fn, -TAU, TAU);
+  }
+
+  function autoY() {
+    setYMinText('');
+    setYMaxText('');
+    plot(fn, Number(xMin), Number(xMax), '', '');
+  }
+
+  function toggleGraphAngleMode() {
+    const next = graphAngleMode === 'rad' ? 'deg' : 'rad';
+    setGraphAngleMode(next);
+    plot(fn, Number(xMin), Number(xMax), yMinText, yMaxText, next);
   }
 
   function exportPng() {
-    if (!canvasRef.current || !points.length) return setGraphStatus('Plot a graph before exporting.');
+    const source = canvasRef.current;
+    if (!source || !points.length) return setGraphStatus('Plot a graph before exporting.');
+    const width = source.clientWidth || 640;
+    const height = source.clientHeight || 320;
+    const captionHeight = 62;
+    const dpr = window.devicePixelRatio || 1;
+    const out = document.createElement('canvas');
+    out.width = Math.floor(width * dpr);
+    out.height = Math.floor((height + captionHeight) * dpr);
+    const ctx = out.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const isLight = theme === 'light';
+    ctx.fillStyle = isLight ? '#f8fbff' : '#080b13';
+    ctx.fillRect(0, 0, width, height + captionHeight);
+    ctx.drawImage(source, 0, 0, width, height);
+    ctx.fillStyle = isLight ? '#111827' : '#f8fbff';
+    ctx.font = '800 13px system-ui, sans-serif';
+    const caption = graphCaption({ fn, xMin, xMax, yMin: fmt(yRange[0]), yMax: fmt(yRange[1]), angleMode: graphAngleMode });
+    ctx.fillText(caption, 14, height + 28);
+    ctx.fillStyle = isLight ? 'rgba(17,24,39,.62)' : 'rgba(226,235,255,.68)';
+    ctx.font = '700 11px system-ui, sans-serif';
+    ctx.fillText('Generated with ParaCalc369', 14, height + 48);
     const link = document.createElement('a');
     link.download = `paracalc369-${fn.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'graph'}.png`;
-    link.href = canvasRef.current.toDataURL('image/png');
+    link.href = out.toDataURL('image/png');
     link.click();
-    setGraphStatus('Graph exported as PNG.');
+    setGraphStatus('Graph exported as captioned PNG.');
   }
 
   function plotOnEnter(event) {
@@ -223,7 +258,7 @@ function GraphPanel({ angleMode, ans, theme }) {
         <div>
           <p className="eyebrow">Graph Mode</p>
           <h2>Plot y = f(x)</h2>
-          <p className="graph-hint">Trig graphs use {angleMode.toUpperCase()} mode. Toggle DEG/RAD on the main keypad.</p>
+          <p className="graph-hint">Graph trig uses its own {graphAngleMode.toUpperCase()} mode. Radian-friendly presets are first.</p>
         </div>
         <button onClick={() => plot()}>Plot</button>
       </header>
@@ -238,10 +273,16 @@ function GraphPanel({ angleMode, ans, theme }) {
         <label><span>x min</span><input value={xMin} onChange={(e) => setXMin(e.target.value)} onKeyDown={plotOnEnter} /></label>
         <label><span>x max</span><input value={xMax} onChange={(e) => setXMax(e.target.value)} onKeyDown={plotOnEnter} /></label>
       </div>
+      <div className="range-row y-range-row">
+        <label><span>y min</span><input value={yMinText} onChange={(e) => setYMinText(e.target.value)} onKeyDown={plotOnEnter} placeholder="auto" /></label>
+        <label><span>y max</span><input value={yMaxText} onChange={(e) => setYMaxText(e.target.value)} onKeyDown={plotOnEnter} placeholder="auto" /></label>
+      </div>
       <div className="graph-tools" aria-label="Graph tools">
         <button onClick={() => zoom(0.5)}>Zoom +</button>
         <button onClick={() => zoom(2)}>Zoom -</button>
-        <button onClick={resetRange}>Reset</button>
+        <button onClick={resetRange}>Reset X</button>
+        <button onClick={autoY}>Auto Y</button>
+        <button onClick={toggleGraphAngleMode}>{graphAngleMode.toUpperCase()}</button>
         <button onClick={exportPng}>PNG</button>
       </div>
       <canvas ref={canvasRef} role="img" aria-label={`Graph of ${fn}`} />
@@ -380,7 +421,7 @@ export default function App() {
       </section>
 
       <aside className="side-stack">
-        <GraphPanel angleMode={mode} ans={ans} theme={theme} />
+        <GraphPanel ans={ans} theme={theme} />
         <UnitConverter initialState={SHARED.unit} />
         <section className="card history">
           <header><h2>History</h2><button onClick={() => setHistory([])} disabled={!history.length}>Clear</button></header>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FAVORITES_KEY, HISTORY_KEY, historyToCsv, itemId, makeExportPackage, normalizeFavorites, normalizeHistory, parseExportPackage } from './historyVault.js';
+import { TOOL_EVENTS } from './toolDockEvents.js';
 
 function readStored(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -31,6 +32,12 @@ export default function HistoryVault() {
   }
 
   useEffect(() => { if (open) load(); }, [open]);
+
+  useEffect(() => {
+    const openFromDock = () => setOpen(true);
+    window.addEventListener(TOOL_EVENTS.history, openFromDock);
+    return () => window.removeEventListener(TOOL_EVENTS.history, openFromDock);
+  }, []);
 
   function toggleFavorite(item) {
     const id = itemId(item);

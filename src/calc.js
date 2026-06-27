@@ -41,7 +41,7 @@ function factorial(n) {
 }
 
 function clean(s) {
-  return s.replace(/×|x/g, '*').replace(/÷/g, '/').replace(/π/g, 'pi').replace(/√/g, 'sqrt').replace(/−/g, '-').replace(/\s+/g, '');
+  return s.replace(/×/g, '*').replace(/÷/g, '/').replace(/π/g, 'pi').replace(/√/g, 'sqrt').replace(/−/g, '-').replace(/\s+/g, '');
 }
 
 function canEnd(t) {
@@ -66,6 +66,7 @@ export function tokenize(expr) {
       const w = s.slice(i).match(/^[a-z]+/i)[0];
       const k = w.toLowerCase();
       if (k === 'ans') raw.push({ t: 'v', v: 'Ans' });
+      else if (k === 'x') raw.push({ t: 'v', v: 'x' });
       else if (k === 'pi') raw.push({ t: 'n', v: Math.PI });
       else if (k === 'e') raw.push({ t: 'n', v: Math.E });
       else if (k === 'mod') raw.push({ t: 'o', v: 'mod' });
@@ -115,11 +116,15 @@ export function toRpn(tokens) {
   return outQ;
 }
 
-export function evaluateRpn(rpn, { angleMode = 'deg', ans = 0 } = {}) {
+export function evaluateRpn(rpn, { angleMode = 'deg', ans = 0, variables = {} } = {}) {
   const st = [];
   for (const t of rpn) {
     if (t.t === 'n') st.push(t.v);
-    else if (t.t === 'v') st.push(ans);
+    else if (t.t === 'v') {
+      if (t.v === 'Ans') st.push(ans);
+      else if (Object.prototype.hasOwnProperty.call(variables, t.v)) st.push(variables[t.v]);
+      else throw Error(`Missing value for ${t.v}.`);
+    }
     else if (t.t === 'f') st.push(finite(FUN[t.v](st.pop(), angleMode)));
     else if (t.t === 'o') {
       const [, , arity, fn] = OPS[t.v];

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { calculate, fmt } from './calc.js';
+import UnitConverter from './UnitConverter.jsx';
 
 const STORE = 'paracalc369.history.v1';
 const THEME_STORE = 'paracalc369.theme.v1';
@@ -335,7 +336,7 @@ export default function App() {
   return (
     <main className="shell">
       <section className="hero">
-        <p className="eyebrow">MIT • free • scientific • graphing • GitHub Pages</p>
+        <p className="eyebrow">MIT • free • scientific • graphing • units • GitHub Pages</p>
         <h1>ParaCalc369</h1>
         <p>A clean calculator for students, builders, and curious humans. No unsafe eval; expressions are parsed in-app.</p>
       </section>
@@ -362,6 +363,7 @@ export default function App() {
 
       <aside className="side-stack">
         <GraphPanel angleMode={mode} ans={ans} theme={theme} />
+        <UnitConverter />
         <section className="card history">
           <header><h2>History</h2><button onClick={() => setHistory([])} disabled={!history.length}>Clear</button></header>
           {history.length ? history.map((h, i) => (

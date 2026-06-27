@@ -6,5 +6,6 @@ describe('tool dock events', () => {
     expect(TOOL_EVENTS.formulas).toBe('paracalc:open-formulas');
     expect(TOOL_EVENTS.history).toBe('paracalc:open-history-vault');
     expect(TOOL_EVENTS.help).toBe('paracalc:open-keyboard-help');
+    expect(TOOL_EVENTS.expression).toBe('paracalc:set-expression');
   });
 });

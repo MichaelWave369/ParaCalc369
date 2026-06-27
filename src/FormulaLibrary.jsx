@@ -1,11 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CONSTANTS, FORMULA_SECTIONS, searchFormulas } from './formulaLibrary.js';
+import { TOOL_EVENTS } from './toolDockEvents.js';
 
 export default function FormulaLibrary() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('Ready');
   const results = useMemo(() => searchFormulas(query), [query]);
+
+  useEffect(() => {
+    const openFromDock = () => setOpen(true);
+    window.addEventListener(TOOL_EVENTS.formulas, openFromDock);
+    return () => window.removeEventListener(TOOL_EVENTS.formulas, openFromDock);
+  }, []);
 
   async function copy(text, label) {
     try {

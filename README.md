@@ -12,6 +12,10 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Parentheses, exponentiation, percent, modulo, implicit multiplication
 - Degrees/radians toggle
 - Memory buttons: `MC`, `MR`, `M+`, `M-`
+- Clean 5-column desktop keypad with familiar number-pad flow
+- Responsive mobile layout
+- Light/dark theme toggle
+- Copy result button
 - History panel
 - Keyboard support
 - No unsafe JavaScript `eval`; expressions are parsed by the included calculator engine
@@ -55,6 +59,16 @@ VITE_BASE=/ParaCalc369/
 
 If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml`.
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
+
+## Changelog
+
+### v1.1 polish pass
+
+- Fixed keypad ordering so the number pad reads naturally.
+- Added copy-result support.
+- Added light/dark theme switching.
+- Improved display hierarchy with expression, preview/status, and result areas.
+- Refined responsive styling for smaller screens.
 
 ## License
 

@@ -16,6 +16,15 @@ const KEYS = [
   ['0', '.', '+', '='],
 ];
 
+const GRAPH_PRESETS = [
+  { label: 'sin', fn: 'sin(x)', min: -10, max: 10 },
+  { label: 'x²', fn: 'x^2', min: -10, max: 10 },
+  { label: 'wave', fn: 'sin(x)+cos(2x)', min: -10, max: 10 },
+  { label: 'cubic', fn: 'x^3 - 4x', min: -4, max: 4 },
+  { label: 'log', fn: 'log(x)', min: 0.1, max: 10 },
+  { label: 'sqrt', fn: 'sqrt(x)', min: 0, max: 10 },
+];
+
 const DANGER = new Set(['AC', 'C', '⌫']);
 const MEMORY = new Set(['MC', 'MR', 'M+', 'M-']);
 const CONTROL = new Set(['Copy', 'DEG/RAD', 'Theme']);
@@ -50,8 +59,14 @@ function label(k, mode, theme) {
   return k;
 }
 
-function niceRange(min, max) {
-  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return [-10, 10];
+function niceRange(values) {
+  const finite = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (!finite.length) return [-10, 10];
+  const lowIndex = Math.floor(finite.length * 0.02);
+  const highIndex = Math.ceil(finite.length * 0.98) - 1;
+  const min = finite[Math.max(0, lowIndex)];
+  const max = finite[Math.min(finite.length - 1, highIndex)];
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return [min - 1, max + 1];
   const pad = Math.max((max - min) * 0.12, 1e-6);
   return [min - pad, max + pad];
 }
@@ -100,7 +115,7 @@ function drawGraph(canvas, points, yRange, theme) {
   ctx.lineCap = 'round';
   let open = false;
   for (const p of points) {
-    if (!Number.isFinite(p.y) || p.y < yMin || p.y > yMax) { open = false; continue; }
+    if (!Number.isFinite(p.y) || p.y < yMin || p.y > yMax) { if (open) ctx.stroke(); open = false; continue; }
     const x = xToPx(p.x);
     const y = yToPx(p.y);
     if (!open) { ctx.beginPath(); ctx.moveTo(x, y); open = true; }
@@ -123,22 +138,22 @@ function GraphPanel({ angleMode, ans, theme }) {
   const [points, setPoints] = useState([]);
   const [yRange, setYRange] = useState([-1, 1]);
 
-  function plot() {
+  function plot(expression = fn, minValue = Number(xMin), maxValue = Number(xMax)) {
     try {
-      const min = Number(xMin);
-      const max = Number(xMax);
+      const min = Number(minValue);
+      const max = Number(maxValue);
       if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) throw Error('Use a valid x range.');
-      const samples = 420;
+      const samples = 560;
       const next = [];
       for (let i = 0; i < samples; i += 1) {
         const x = min + ((max - min) * i) / (samples - 1);
         let y = NaN;
-        try { y = calculate(fn, { angleMode, ans, variables: { x } }); } catch { y = NaN; }
+        try { y = calculate(expression, { angleMode, ans, variables: { x } }); } catch { y = NaN; }
         next.push({ x, y });
       }
       const finiteYs = next.map((p) => p.y).filter(Number.isFinite);
       if (!finiteYs.length) throw Error('No plottable points in this range.');
-      const yr = niceRange(Math.min(...finiteYs), Math.max(...finiteYs));
+      const yr = niceRange(finiteYs);
       setPoints(next);
       setYRange(yr);
       setGraphStatus(`Plotted ${finiteYs.length}/${samples} points.`);
@@ -146,6 +161,41 @@ function GraphPanel({ angleMode, ans, theme }) {
       setGraphStatus(e.message);
       setPoints([]);
     }
+  }
+
+  function applyPreset(preset) {
+    setFn(preset.fn);
+    setXMin(String(preset.min));
+    setXMax(String(preset.max));
+    plot(preset.fn, preset.min, preset.max);
+  }
+
+  function zoom(factor) {
+    const min = Number(xMin);
+    const max = Number(xMax);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) return setGraphStatus('Use a valid x range first.');
+    const center = (min + max) / 2;
+    const half = ((max - min) * factor) / 2;
+    const nextMin = center - half;
+    const nextMax = center + half;
+    setXMin(fmt(nextMin));
+    setXMax(fmt(nextMax));
+    plot(fn, nextMin, nextMax);
+  }
+
+  function resetRange() {
+    setXMin('-10');
+    setXMax('10');
+    plot(fn, -10, 10);
+  }
+
+  function exportPng() {
+    if (!canvasRef.current || !points.length) return setGraphStatus('Plot a graph before exporting.');
+    const link = document.createElement('a');
+    link.download = `paracalc369-${fn.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'graph'}.png`;
+    link.href = canvasRef.current.toDataURL('image/png');
+    link.click();
+    setGraphStatus('Graph exported as PNG.');
   }
 
   useEffect(() => { plot(); }, []);
@@ -163,15 +213,24 @@ function GraphPanel({ angleMode, ans, theme }) {
           <p className="eyebrow">Graph Mode</p>
           <h2>Plot y = f(x)</h2>
         </div>
-        <button onClick={plot}>Plot</button>
+        <button onClick={() => plot()}>Plot</button>
       </header>
       <label>
         <span>Function</span>
         <input value={fn} onChange={(e) => setFn(e.target.value)} placeholder="sin(x), x^2, log(x)" />
       </label>
+      <div className="preset-row" aria-label="Graph presets">
+        {GRAPH_PRESETS.map((preset) => <button key={preset.label} onClick={() => applyPreset(preset)}>{preset.label}</button>)}
+      </div>
       <div className="range-row">
         <label><span>x min</span><input value={xMin} onChange={(e) => setXMin(e.target.value)} /></label>
         <label><span>x max</span><input value={xMax} onChange={(e) => setXMax(e.target.value)} /></label>
+      </div>
+      <div className="graph-tools" aria-label="Graph tools">
+        <button onClick={() => zoom(0.5)}>Zoom +</button>
+        <button onClick={() => zoom(2)}>Zoom -</button>
+        <button onClick={resetRange}>Reset</button>
+        <button onClick={exportPng}>PNG</button>
       </div>
       <canvas ref={canvasRef} role="img" aria-label={`Graph of ${fn}`} />
       <p className="graph-status">{graphStatus}</p>

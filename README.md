@@ -1,6 +1,6 @@
 # ParaCalc369
 
-A free, MIT-licensed scientific calculator built with React + Vite and designed for GitHub Pages.
+A free, MIT-licensed scientific and graphing calculator built with React + Vite and designed for GitHub Pages.
 
 Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc369/`.
 
@@ -16,6 +16,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Responsive mobile layout
 - Light/dark theme toggle
 - Copy result button
+- Graph mode for functions like `sin(x)`, `x^2`, and `log(x)`
 - History panel
 - Keyboard support
 - No unsafe JavaScript `eval`; expressions are parsed by the included calculator engine
@@ -61,6 +62,13 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v1.2 graph mode
+
+- Added graph mode with a lightweight canvas renderer.
+- Added `x` variable support to the parser/evaluator.
+- Added graph tests for variable expressions.
+- Kept graphing dependency-free: no charting library required.
 
 ### v1.1 polish pass
 

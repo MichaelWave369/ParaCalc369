@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { calculate, fmt } from './calc.js';
 
 const STORE = 'paracalc369.history.v1';
@@ -50,6 +50,135 @@ function label(k, mode, theme) {
   return k;
 }
 
+function niceRange(min, max) {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return [-10, 10];
+  const pad = Math.max((max - min) * 0.12, 1e-6);
+  return [min - pad, max + pad];
+}
+
+function drawGraph(canvas, points, yRange, theme) {
+  const ctx = canvas.getContext('2d');
+  const width = canvas.clientWidth || 640;
+  const height = canvas.clientHeight || 320;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(width * dpr);
+  canvas.height = Math.floor(height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  const isLight = theme === 'light';
+  const grid = isLight ? 'rgba(31,41,75,.12)' : 'rgba(255,255,255,.10)';
+  const axis = isLight ? 'rgba(31,41,75,.32)' : 'rgba(255,255,255,.24)';
+  const line = isLight ? '#526dff' : '#9d74ff';
+  const text = isLight ? 'rgba(17,24,39,.62)' : 'rgba(226,235,255,.68)';
+
+  ctx.fillStyle = isLight ? 'rgba(255,255,255,.62)' : 'rgba(255,255,255,.035)';
+  ctx.fillRect(0, 0, width, height);
+
+  const xMin = points[0]?.x ?? -10;
+  const xMax = points.at(-1)?.x ?? 10;
+  const [yMin, yMax] = yRange;
+  const xToPx = (x) => ((x - xMin) / (xMax - xMin)) * width;
+  const yToPx = (y) => height - ((y - yMin) / (yMax - yMin)) * height;
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = grid;
+  for (let i = 1; i < 10; i += 1) {
+    const x = (width * i) / 10;
+    const y = (height * i) / 10;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+  }
+
+  ctx.strokeStyle = axis;
+  if (xMin <= 0 && xMax >= 0) { const x0 = xToPx(0); ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, height); ctx.stroke(); }
+  if (yMin <= 0 && yMax >= 0) { const y0 = yToPx(0); ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(width, y0); ctx.stroke(); }
+
+  ctx.strokeStyle = line;
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  let open = false;
+  for (const p of points) {
+    if (!Number.isFinite(p.y) || p.y < yMin || p.y > yMax) { open = false; continue; }
+    const x = xToPx(p.x);
+    const y = yToPx(p.y);
+    if (!open) { ctx.beginPath(); ctx.moveTo(x, y); open = true; }
+    else ctx.lineTo(x, y);
+  }
+  if (open) ctx.stroke();
+
+  ctx.fillStyle = text;
+  ctx.font = '700 12px system-ui, sans-serif';
+  ctx.fillText(`x ${fmt(xMin)} → ${fmt(xMax)}`, 12, height - 14);
+  ctx.fillText(`y ${fmt(yMin)} → ${fmt(yMax)}`, 12, 22);
+}
+
+function GraphPanel({ angleMode, ans, theme }) {
+  const canvasRef = useRef(null);
+  const [fn, setFn] = useState('sin(x)');
+  const [xMin, setXMin] = useState('-10');
+  const [xMax, setXMax] = useState('10');
+  const [graphStatus, setGraphStatus] = useState('Ready to plot.');
+  const [points, setPoints] = useState([]);
+  const [yRange, setYRange] = useState([-1, 1]);
+
+  function plot() {
+    try {
+      const min = Number(xMin);
+      const max = Number(xMax);
+      if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) throw Error('Use a valid x range.');
+      const samples = 420;
+      const next = [];
+      for (let i = 0; i < samples; i += 1) {
+        const x = min + ((max - min) * i) / (samples - 1);
+        let y = NaN;
+        try { y = calculate(fn, { angleMode, ans, variables: { x } }); } catch { y = NaN; }
+        next.push({ x, y });
+      }
+      const finiteYs = next.map((p) => p.y).filter(Number.isFinite);
+      if (!finiteYs.length) throw Error('No plottable points in this range.');
+      const yr = niceRange(Math.min(...finiteYs), Math.max(...finiteYs));
+      setPoints(next);
+      setYRange(yr);
+      setGraphStatus(`Plotted ${finiteYs.length}/${samples} points.`);
+    } catch (e) {
+      setGraphStatus(e.message);
+      setPoints([]);
+    }
+  }
+
+  useEffect(() => { plot(); }, []);
+  useEffect(() => { if (canvasRef.current && points.length) drawGraph(canvasRef.current, points, yRange, theme); }, [points, yRange, theme]);
+  useEffect(() => {
+    const resize = () => { if (canvasRef.current && points.length) drawGraph(canvasRef.current, points, yRange, theme); };
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, [points, yRange, theme]);
+
+  return (
+    <section className="card graph" aria-label="Graphing calculator">
+      <header>
+        <div>
+          <p className="eyebrow">Graph Mode</p>
+          <h2>Plot y = f(x)</h2>
+        </div>
+        <button onClick={plot}>Plot</button>
+      </header>
+      <label>
+        <span>Function</span>
+        <input value={fn} onChange={(e) => setFn(e.target.value)} placeholder="sin(x), x^2, log(x)" />
+      </label>
+      <div className="range-row">
+        <label><span>x min</span><input value={xMin} onChange={(e) => setXMin(e.target.value)} /></label>
+        <label><span>x max</span><input value={xMax} onChange={(e) => setXMax(e.target.value)} /></label>
+      </div>
+      <canvas ref={canvasRef} role="img" aria-label={`Graph of ${fn}`} />
+      <p className="graph-status">{graphStatus}</p>
+    </section>
+  );
+}
+
 export default function App() {
   const [expr, setExpr] = useState('');
   const [result, setResult] = useState('0');
@@ -73,8 +202,9 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
-    const map = { '*': '×', '/': '÷', x: '×', X: '×', p: 'π', P: 'π', Enter: '=', Escape: 'AC', Backspace: '⌫' };
+    const map = { '*': '×', '/': '÷', p: 'π', P: 'π', Enter: '=', Escape: 'AC', Backspace: '⌫' };
     const onKey = (e) => {
+      if (e.target?.tagName === 'INPUT') return;
       const k = /^[0-9.]$/.test(e.key) || ['+', '-', '^', '%', '(', ')'].includes(e.key) ? e.key : map[e.key];
       if (k) { e.preventDefault(); press(k); }
     };
@@ -146,7 +276,7 @@ export default function App() {
   return (
     <main className="shell">
       <section className="hero">
-        <p className="eyebrow">MIT • free • scientific • GitHub Pages</p>
+        <p className="eyebrow">MIT • free • scientific • graphing • GitHub Pages</p>
         <h1>ParaCalc369</h1>
         <p>A clean calculator for students, builders, and curious humans. No unsafe eval; expressions are parsed in-app.</p>
       </section>
@@ -171,13 +301,16 @@ export default function App() {
         </div>
       </section>
 
-      <aside className="card history">
-        <header><h2>History</h2><button onClick={() => setHistory([])} disabled={!history.length}>Clear</button></header>
-        {history.length ? history.map((h, i) => (
-          <button key={`${h.expr}-${i}`} onClick={() => loadHistory(h)}>
-            <span>{h.expr}</span><strong>{h.value}</strong>
-          </button>
-        )) : <p>No calculations yet.</p>}
+      <aside className="side-stack">
+        <GraphPanel angleMode={mode} ans={ans} theme={theme} />
+        <section className="card history">
+          <header><h2>History</h2><button onClick={() => setHistory([])} disabled={!history.length}>Clear</button></header>
+          {history.length ? history.map((h, i) => (
+            <button key={`${h.expr}-${i}`} onClick={() => loadHistory(h)}>
+              <span>{h.expr}</span><strong>{h.value}</strong>
+            </button>
+          )) : <p>No calculations yet.</p>}
+        </section>
       </aside>
     </main>
   );

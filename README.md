@@ -16,8 +16,10 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Responsive mobile layout
 - Light/dark theme toggle
 - Copy result button
+- Enter-to-solve from the main expression input
+- Friendlier calculator error messages
 - Graph mode for functions like `sin(x)`, `x^2`, and `log(x)`
-- Graph presets, zoom controls, reset range, and PNG export
+- Graph presets, zoom controls, reset range, PNG export, Enter-to-plot, and angle-mode guidance
 - Unit converter mode for length, mass, temperature, time, data, speed, area, volume, and angle
 - Shareable workspace URLs for calculator, graph, and unit converter state
 - Formula Library mode with geometry, physics basics, finance, unit helpers, and constants
@@ -34,7 +36,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - `/` focuses the main calculator input.
 - `?` opens or closes the keyboard help panel.
 - `Escape` closes help.
-- `Enter` solves when calculator buttons are focused.
+- `Enter` solves from the main calculator input and plots from graph inputs.
 - Number and operator keys can be typed directly in calculator fields.
 
 ## Project docs
@@ -86,6 +88,16 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v2.2 calculator UX polish
+
+- Added Enter-to-solve from the main expression input.
+- Added Enter-to-plot for graph function and range inputs.
+- Added friendlier UI error messages without changing the core parser.
+- Added graph angle-mode guidance so users know whether trig plots use DEG or RAD.
+- Improved mobile spacing around the Tools Dock and PWA status.
+- Added friendly error message tests.
+- Bumped service worker cache version.
 
 ### v2.1 repo polish
 

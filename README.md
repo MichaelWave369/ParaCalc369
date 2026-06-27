@@ -1,6 +1,6 @@
 # ParaCalc369
 
-A free, MIT-licensed scientific and graphing calculator built with React + Vite and designed for GitHub Pages.
+A free, MIT-licensed scientific, graphing, and unit conversion calculator built with React + Vite and designed for GitHub Pages.
 
 Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc369/`.
 
@@ -18,6 +18,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Copy result button
 - Graph mode for functions like `sin(x)`, `x^2`, and `log(x)`
 - Graph presets, zoom controls, reset range, and PNG export
+- Unit converter mode for length, mass, temperature, time, data, speed, area, volume, and angle
 - History panel
 - Keyboard support
 - No unsafe JavaScript `eval`; expressions are parsed by the included calculator engine
@@ -63,6 +64,13 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v1.4 unit converter mode
+
+- Added unit converter panel.
+- Added conversion support for length, mass, temperature, time, data, speed, area, volume, and angle.
+- Added swap, quick value buttons, and copy conversion.
+- Added standalone converter engine and tests.
 
 ### v1.3 graph tools
 

@@ -17,6 +17,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Light/dark theme toggle
 - Copy result button
 - Graph mode for functions like `sin(x)`, `x^2`, and `log(x)`
+- Graph presets, zoom controls, reset range, and PNG export
 - History panel
 - Keyboard support
 - No unsafe JavaScript `eval`; expressions are parsed by the included calculator engine
@@ -62,6 +63,14 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v1.3 graph tools
+
+- Added graph presets for common functions.
+- Added zoom in, zoom out, and reset range controls.
+- Added PNG export for generated graphs.
+- Improved y-range selection so outliers are less likely to flatten useful graph detail.
+- Increased graph sample count for smoother curves.
 
 ### v1.2 graph mode
 

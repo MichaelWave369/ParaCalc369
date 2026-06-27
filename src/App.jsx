@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { calculate, fmt } from './calc.js';
 import UnitConverter from './UnitConverter.jsx';
+import { readSharedState } from './shareState.js';
 
 const STORE = 'paracalc369.history.v1';
 const THEME_STORE = 'paracalc369.theme.v1';
+const SHARED = readSharedState();
 
 const KEYS = [
   ['AC', 'C', '⌫', 'Copy', 'DEG/RAD'],
@@ -132,10 +134,10 @@ function drawGraph(canvas, points, yRange, theme) {
 
 function GraphPanel({ angleMode, ans, theme }) {
   const canvasRef = useRef(null);
-  const [fn, setFn] = useState('sin(x)');
-  const [xMin, setXMin] = useState('-10');
-  const [xMax, setXMax] = useState('10');
-  const [graphStatus, setGraphStatus] = useState('Ready to plot.');
+  const [fn, setFn] = useState(SHARED.graph.fn || 'sin(x)');
+  const [xMin, setXMin] = useState(SHARED.graph.min || '-10');
+  const [xMax, setXMax] = useState(SHARED.graph.max || '10');
+  const [graphStatus, setGraphStatus] = useState(SHARED.graph.fn ? 'Loaded from shared URL' : 'Ready to plot.');
   const [points, setPoints] = useState([]);
   const [yRange, setYRange] = useState([-1, 1]);
 
@@ -240,12 +242,12 @@ function GraphPanel({ angleMode, ans, theme }) {
 }
 
 export default function App() {
-  const [expr, setExpr] = useState('');
+  const [expr, setExpr] = useState(SHARED.expr || '');
   const [result, setResult] = useState('0');
   const [ans, setAns] = useState(0);
   const [mode, setMode] = useState('deg');
   const [mem, setMem] = useState(0);
-  const [status, setStatus] = useState('Ready');
+  const [status, setStatus] = useState(SHARED.expr ? 'Loaded from shared URL' : 'Ready');
   const [history, setHistory] = useState(savedHistory);
   const [theme, setTheme] = useState(savedTheme);
 
@@ -336,7 +338,7 @@ export default function App() {
   return (
     <main className="shell">
       <section className="hero">
-        <p className="eyebrow">MIT • free • scientific • graphing • units • GitHub Pages</p>
+        <p className="eyebrow">MIT • free • scientific • graphing • units • shareable • GitHub Pages</p>
         <h1>ParaCalc369</h1>
         <p>A clean calculator for students, builders, and curious humans. No unsafe eval; expressions are parsed in-app.</p>
       </section>
@@ -347,7 +349,7 @@ export default function App() {
             <span>{mode.toUpperCase()}</span>
             <span>MEM {fmt(mem)}</span>
           </div>
-          <input value={expr} onChange={(e) => (setExpr(e.target.value), setStatus('Ready'))} placeholder="Type or tap a calculation" aria-label="Expression" />
+          <input data-shortcut-target="calculator-input" value={expr} onChange={(e) => (setExpr(e.target.value), setStatus('Ready'))} placeholder="Type or tap a calculation" aria-label="Expression" />
           <div className="preview" aria-live="polite">{preview ? `Preview ${preview}` : status}</div>
           <div className="result-row">
             <span>Result</span>
@@ -363,7 +365,7 @@ export default function App() {
 
       <aside className="side-stack">
         <GraphPanel angleMode={mode} ans={ans} theme={theme} />
-        <UnitConverter />
+        <UnitConverter initialState={SHARED.unit} />
         <section className="card history">
           <header><h2>History</h2><button onClick={() => setHistory([])} disabled={!history.length}>Clear</button></header>
           {history.length ? history.map((h, i) => (

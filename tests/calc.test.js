@@ -31,4 +31,13 @@ describe('ParaCalc369 engine', () => {
     expect(calculate('2(3+4)')).toBe(14);
     expect(fmt(1000 / 3)).toBe('333.333333333');
   });
+
+  it('supports x variables for graphing', () => {
+    expect(calculate('x^2 + 2x + 1', { variables: { x: 3 } })).toBe(16);
+    close(calculate('sin(x)', { angleMode: 'rad', variables: { x: Math.PI / 2 } }), 1);
+  });
+
+  it('requires variable values when variables are present', () => {
+    expect(() => calculate('x+1')).toThrow('Missing value for x.');
+  });
 });

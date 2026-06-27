@@ -6,6 +6,7 @@ import KeyboardHelp from './KeyboardHelp.jsx';
 import SharePanel from './SharePanel.jsx';
 import FormulaLibrary from './FormulaLibrary.jsx';
 import HistoryVault from './HistoryVault.jsx';
+import ToolsDock from './ToolsDock.jsx';
 import { registerServiceWorker } from './registerServiceWorker.js';
 import './styles.css';
 import './graph.css';
@@ -14,6 +15,7 @@ import './pwa.css';
 import './share.css';
 import './formula.css';
 import './historyVault.css';
+import './toolsDock.css';
 import './accessibility.css';
 
 createRoot(document.getElementById('root')).render(
@@ -24,6 +26,7 @@ createRoot(document.getElementById('root')).render(
     <FormulaLibrary />
     <HistoryVault />
     <KeyboardHelp />
+    <ToolsDock />
   </React.StrictMode>,
 );
 

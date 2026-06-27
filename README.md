@@ -22,6 +22,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Shareable workspace URLs for calculator, graph, and unit converter state
 - Formula Library mode with geometry, physics basics, finance, unit helpers, and constants
 - History Vault mode with favorites, JSON/CSV export, restore, copy, and clear tools
+- Unified Tools Dock for share, formulas, history, and help
 - PWA install support with manifest, service worker, offline fallback, and update prompt
 - Keyboard help overlay and global focus shortcuts
 - History panel
@@ -77,6 +78,15 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v2.0 Tools Dock polish
+
+- Added unified Tools Dock.
+- Moved Share, Clear URL, Formula Library, History Vault, and Help into one dock.
+- Retired scattered floating tool buttons with CSS while keeping the working overlays intact.
+- Added dock event bridge for opening existing overlays safely.
+- Added Tools Dock event tests.
+- Bumped service worker cache version.
 
 ### v1.9 History Vault mode
 

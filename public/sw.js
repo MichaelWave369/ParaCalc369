@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paracalc369-v2.0.0';
+const CACHE_NAME = 'paracalc369-v2.2.0';
 const CORE_ASSETS = ['.', 'offline.html', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (event) => {

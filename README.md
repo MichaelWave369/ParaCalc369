@@ -22,7 +22,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Graph presets, zoom controls, reset range, manual y-range, tick labels, captioned PNG export, Enter-to-plot, and graph-local RAD/DEG mode
 - Unit converter mode for length, mass, temperature, time, data, speed, area, volume, and angle
 - Shareable workspace URLs for calculator, graph, and unit converter state
-- Formula Library mode with geometry, physics basics, finance, unit helpers, and constants
+- Formula Library mode with searchable geometry, algebra, trigonometry, statistics, physics, electricity, finance, unit helpers, tags, constants, copy cards, and insertable examples
 - History Vault mode with favorites, JSON/CSV export, restore, copy, and clear tools
 - Unified Tools Dock for share, formulas, history, and help
 - PWA install support with manifest, service worker, offline fallback, and update prompt
@@ -88,6 +88,18 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v2.4 Formula Library upgrades
+
+- Added formula example insertion into the main calculator.
+- Added expression insertion event bridge.
+- Added Algebra, Trigonometry, Statistics, and Electricity sections.
+- Added searchable tags to formula entries.
+- Added tag chips to formula cards.
+- Added Use Example actions beside Copy actions.
+- Updated constant buttons to insert constants into the calculator.
+- Added expanded Formula Library tests.
+- Bumped service worker cache version.
 
 ### v2.3 Graph upgrades
 

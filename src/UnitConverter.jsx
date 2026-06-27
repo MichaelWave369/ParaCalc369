@@ -1,22 +1,36 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CATEGORIES, categoryNames, convert, formatConverted, unitsFor } from './converter.js';
 
 function defaultUnit(category, index = 0) {
   return unitsFor(category)[index] || unitsFor(category)[0] || '';
 }
 
-export default function UnitConverter() {
-  const [category, setCategory] = useState('length');
-  const [fromUnit, setFromUnit] = useState(defaultUnit('length', 2));
-  const [toUnit, setToUnit] = useState(defaultUnit('length', 5));
-  const [value, setValue] = useState('1');
-  const [status, setStatus] = useState('Ready');
+function validCategory(category) {
+  return CATEGORIES[category] ? category : 'length';
+}
+
+function validUnit(category, unit, fallbackIndex = 0) {
+  const units = unitsFor(category);
+  return units.includes(unit) ? unit : defaultUnit(category, fallbackIndex);
+}
+
+export default function UnitConverter({ initialState = {}, onStateChange = () => {} }) {
+  const startCategory = validCategory(initialState.category || 'length');
+  const [category, setCategory] = useState(startCategory);
+  const [fromUnit, setFromUnit] = useState(validUnit(startCategory, initialState.fromUnit, 2));
+  const [toUnit, setToUnit] = useState(validUnit(startCategory, initialState.toUnit, 5));
+  const [value, setValue] = useState(initialState.value || '1');
+  const [status, setStatus] = useState(initialState.category ? 'Loaded from shared URL' : 'Ready');
 
   const units = useMemo(() => unitsFor(category), [category]);
   const result = useMemo(() => {
     try { return formatConverted(convert(value, category, fromUnit, toUnit)); }
     catch { return '—'; }
   }, [value, category, fromUnit, toUnit]);
+
+  useEffect(() => {
+    onStateChange({ category, value, fromUnit, toUnit });
+  }, [category, value, fromUnit, toUnit, onStateChange]);
 
   function chooseCategory(nextCategory) {
     const nextUnits = unitsFor(nextCategory);
@@ -78,7 +92,7 @@ export default function UnitConverter() {
         </label>
       </div>
 
-      <div className="conversion-result">
+      <div className="conversion-result" aria-live="polite">
         <span>{value || '0'} {fromUnit}</span>
         <strong>{result} {toUnit}</strong>
       </div>

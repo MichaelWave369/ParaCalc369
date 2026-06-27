@@ -11,7 +11,7 @@ const SHORTCUTS = [
 ];
 
 function focusExpression() {
-  const input = document.querySelector('[data-shortcut-target="calculator-input"]');
+  const input = document.querySelector('[data-shortcut-target="calculator-input"], [aria-label="Expression"]');
   if (input) {
     input.focus();
     input.select?.();
@@ -49,7 +49,7 @@ export default function KeyboardHelp() {
 
   return (
     <>
-      <button className="help-fab" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open}>?</button>
+      <button className="help-fab" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} aria-keyshortcuts="?" aria-label="Open keyboard shortcuts">?</button>
       {open ? (
         <div className="help-backdrop" role="presentation" onMouseDown={() => setOpen(false)}>
           <section className="help-dialog" role="dialog" aria-modal="true" aria-labelledby="keyboard-help-title" onMouseDown={(e) => e.stopPropagation()}>

@@ -37,6 +37,14 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - `Enter` solves when calculator buttons are focused.
 - Number and operator keys can be typed directly in calculator fields.
 
+## Project docs
+
+- [Contributing](CONTRIBUTING.md)
+- [Roadmap](ROADMAP.md)
+- [Release checklist](RELEASE_CHECKLIST.md)
+- [Support](SUPPORT.md)
+- [Screenshots guide](docs/SCREENSHOTS.md)
+
 ## Local development
 
 ```bash
@@ -78,6 +86,18 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v2.1 repo polish
+
+- Added contribution guide.
+- Added roadmap.
+- Added release checklist.
+- Added screenshots guide.
+- Added support guide.
+- Added bug report issue template.
+- Added feature request issue template.
+- Added pull request template.
+- Added README links to project docs.
 
 ### v2.0 Tools Dock polish
 

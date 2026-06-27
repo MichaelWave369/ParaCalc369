@@ -1,6 +1,6 @@
 # ParaCalc369
 
-A free, MIT-licensed scientific, graphing, unit conversion, installable, shareable, and formula-reference calculator built with React + Vite and designed for GitHub Pages.
+A free, MIT-licensed scientific, graphing, unit conversion, installable, shareable, formula-reference, and history-aware calculator built with React + Vite and designed for GitHub Pages.
 
 Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc369/`.
 
@@ -21,6 +21,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Unit converter mode for length, mass, temperature, time, data, speed, area, volume, and angle
 - Shareable workspace URLs for calculator, graph, and unit converter state
 - Formula Library mode with geometry, physics basics, finance, unit helpers, and constants
+- History Vault mode with favorites, JSON/CSV export, restore, copy, and clear tools
 - PWA install support with manifest, service worker, offline fallback, and update prompt
 - Keyboard help overlay and global focus shortcuts
 - History panel
@@ -76,6 +77,17 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v1.9 History Vault mode
+
+- Added History Vault overlay.
+- Added favorite calculations stored locally.
+- Added JSON history export and restore.
+- Added CSV history export.
+- Added copy tools for saved calculations.
+- Added clear and reload tools.
+- Added History Vault helper tests.
+- Bumped service worker cache version.
 
 ### v1.8 Formula Library mode
 

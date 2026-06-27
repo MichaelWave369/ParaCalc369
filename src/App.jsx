@@ -4,6 +4,7 @@ import { friendlyErrorMessage } from './errorMessages.js';
 import { graphCaption, resolveYRange } from './graphUtils.js';
 import UnitConverter from './UnitConverter.jsx';
 import { readSharedState } from './shareState.js';
+import { TOOL_EVENTS } from './toolDockEvents.js';
 
 const STORE = 'paracalc369.history.v1';
 const THEME_STORE = 'paracalc369.theme.v1';
@@ -312,6 +313,18 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem(THEME_STORE, JSON.stringify(theme));
   }, [theme]);
+
+  useEffect(() => {
+    const handleInsertExpression = (event) => {
+      const next = String(event.detail?.expression || '');
+      if (!next) return;
+      setExpr(next);
+      setStatus('Inserted formula example');
+      requestAnimationFrame(() => document.querySelector('[data-shortcut-target="calculator-input"]')?.focus());
+    };
+    window.addEventListener(TOOL_EVENTS.expression, handleInsertExpression);
+    return () => window.removeEventListener(TOOL_EVENTS.expression, handleInsertExpression);
+  }, []);
 
   useEffect(() => {
     const map = { '*': '×', '/': '÷', p: 'π', P: 'π', Enter: '=', Escape: 'AC', Backspace: '⌫' };

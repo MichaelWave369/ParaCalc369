@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { calculate, fmt } from './calc.js';
+import { friendlyErrorMessage } from './errorMessages.js';
 import UnitConverter from './UnitConverter.jsx';
 import { readSharedState } from './shareState.js';
 
@@ -159,9 +160,9 @@ function GraphPanel({ angleMode, ans, theme }) {
       const yr = niceRange(finiteYs);
       setPoints(next);
       setYRange(yr);
-      setGraphStatus(`Plotted ${finiteYs.length}/${samples} points.`);
+      setGraphStatus(`Plotted ${finiteYs.length}/${samples} points in ${angleMode.toUpperCase()} mode.`);
     } catch (e) {
-      setGraphStatus(e.message);
+      setGraphStatus(friendlyErrorMessage(e));
       setPoints([]);
     }
   }
@@ -201,6 +202,13 @@ function GraphPanel({ angleMode, ans, theme }) {
     setGraphStatus('Graph exported as PNG.');
   }
 
+  function plotOnEnter(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      plot();
+    }
+  }
+
   useEffect(() => { plot(); }, []);
   useEffect(() => { if (canvasRef.current && points.length) drawGraph(canvasRef.current, points, yRange, theme); }, [points, yRange, theme]);
   useEffect(() => {
@@ -215,19 +223,20 @@ function GraphPanel({ angleMode, ans, theme }) {
         <div>
           <p className="eyebrow">Graph Mode</p>
           <h2>Plot y = f(x)</h2>
+          <p className="graph-hint">Trig graphs use {angleMode.toUpperCase()} mode. Toggle DEG/RAD on the main keypad.</p>
         </div>
         <button onClick={() => plot()}>Plot</button>
       </header>
       <label>
         <span>Function</span>
-        <input value={fn} onChange={(e) => setFn(e.target.value)} placeholder="sin(x), x^2, log(x)" />
+        <input value={fn} onChange={(e) => setFn(e.target.value)} onKeyDown={plotOnEnter} placeholder="sin(x), x^2, log(x)" />
       </label>
       <div className="preset-row" aria-label="Graph presets">
         {GRAPH_PRESETS.map((preset) => <button key={preset.label} onClick={() => applyPreset(preset)}>{preset.label}</button>)}
       </div>
       <div className="range-row">
-        <label><span>x min</span><input value={xMin} onChange={(e) => setXMin(e.target.value)} /></label>
-        <label><span>x max</span><input value={xMax} onChange={(e) => setXMax(e.target.value)} /></label>
+        <label><span>x min</span><input value={xMin} onChange={(e) => setXMin(e.target.value)} onKeyDown={plotOnEnter} /></label>
+        <label><span>x max</span><input value={xMax} onChange={(e) => setXMax(e.target.value)} onKeyDown={plotOnEnter} /></label>
       </div>
       <div className="graph-tools" aria-label="Graph tools">
         <button onClick={() => zoom(0.5)}>Zoom +</button>
@@ -288,7 +297,7 @@ export default function App() {
       setExpr(shown);
       setStatus('Solved');
       setHistory((h) => [{ expr: target, value: shown }, ...h].slice(0, 20));
-    } catch (e) { setStatus(e.message); }
+    } catch (e) { setStatus(friendlyErrorMessage(e)); }
   }
 
   function memory(sign) {
@@ -296,7 +305,7 @@ export default function App() {
       const value = expr.trim() ? calculate(expr, { angleMode: mode, ans }) : Number(result);
       setMem((m) => m + sign * value);
       setStatus(sign > 0 ? 'Added to memory' : 'Subtracted from memory');
-    } catch (e) { setStatus(e.message); }
+    } catch (e) { setStatus(friendlyErrorMessage(e)); }
   }
 
   async function copyResult() {
@@ -319,7 +328,7 @@ export default function App() {
     if (k === 'C') return void (setExpr(''), setStatus('Expression cleared'));
     if (k === '⌫') return void (setExpr((s) => s.slice(0, -1)), setStatus('Ready'));
     if (k === '=') return run();
-    if (k === 'DEG/RAD') return void (setMode((m) => (m === 'deg' ? 'rad' : 'deg')), setStatus('Angle mode changed'));
+    if (k === 'DEG/RAD') return void (setMode((m) => (m === 'deg' ? 'rad' : 'deg')), setStatus(`Angle mode changed to ${mode === 'deg' ? 'RAD' : 'DEG'}`));
     if (k === 'Theme') return void setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
     if (k === 'Copy') return copyResult();
     if (k === 'MC') return void (setMem(0), setStatus('Memory cleared'));
@@ -333,6 +342,13 @@ export default function App() {
     setExpr(item.expr);
     setResult(item.value);
     setStatus('Loaded from history');
+  }
+
+  function solveFromInput(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      run(event.currentTarget.value);
+    }
   }
 
   return (
@@ -349,7 +365,7 @@ export default function App() {
             <span>{mode.toUpperCase()}</span>
             <span>MEM {fmt(mem)}</span>
           </div>
-          <input data-shortcut-target="calculator-input" value={expr} onChange={(e) => (setExpr(e.target.value), setStatus('Ready'))} placeholder="Type or tap a calculation" aria-label="Expression" />
+          <input data-shortcut-target="calculator-input" value={expr} onChange={(e) => (setExpr(e.target.value), setStatus('Ready'))} onKeyDown={solveFromInput} placeholder="Type or tap a calculation" aria-label="Expression" />
           <div className="preview" aria-live="polite">{preview ? `Preview ${preview}` : status}</div>
           <div className="result-row">
             <span>Result</span>

@@ -20,9 +20,18 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Graph presets, zoom controls, reset range, and PNG export
 - Unit converter mode for length, mass, temperature, time, data, speed, area, volume, and angle
 - PWA install support with manifest, service worker, offline fallback, and update prompt
+- Keyboard help overlay and global focus shortcuts
 - History panel
 - Keyboard support
 - No unsafe JavaScript `eval`; expressions are parsed by the included calculator engine
+
+## Keyboard shortcuts
+
+- `/` focuses the main calculator input.
+- `?` opens or closes the keyboard help panel.
+- `Escape` closes help.
+- `Enter` solves when calculator buttons are focused.
+- Number and operator keys can be typed directly in calculator fields.
 
 ## Local development
 
@@ -65,6 +74,14 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v1.6 accessibility and keyboard mode
+
+- Added keyboard shortcut help overlay.
+- Added `/` shortcut to focus the main calculator input.
+- Added `?` shortcut to open and close help.
+- Added stronger focus styles and screen-reader utility CSS.
+- Added an ARIA shortcut hint for the help button.
 
 ### v1.5 PWA install mode
 

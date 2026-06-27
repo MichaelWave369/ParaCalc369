@@ -19,7 +19,7 @@ Live app target after Pages deploy: `https://MichaelWave369.github.io/ParaCalc36
 - Enter-to-solve from the main expression input
 - Friendlier calculator error messages
 - Graph mode for functions like `sin(x)`, `x^2`, and `log(x)`
-- Graph presets, zoom controls, reset range, PNG export, Enter-to-plot, and angle-mode guidance
+- Graph presets, zoom controls, reset range, manual y-range, tick labels, captioned PNG export, Enter-to-plot, and graph-local RAD/DEG mode
 - Unit converter mode for length, mass, temperature, time, data, speed, area, volume, and angle
 - Shareable workspace URLs for calculator, graph, and unit converter state
 - Formula Library mode with geometry, physics basics, finance, unit helpers, and constants
@@ -88,6 +88,18 @@ If you rename the repository, update `VITE_BASE` in `.github/workflows/pages.yml
 For a user/org page such as `USERNAME.github.io`, use `/` instead.
 
 ## Changelog
+
+### v2.3 Graph upgrades
+
+- Added graph utility helpers and tests.
+- Added graph-local RAD/DEG mode with RAD as the graph default.
+- Added radians-first graph presets.
+- Added manual y-min and y-max controls.
+- Added Auto Y reset.
+- Added tick labels on graph canvas.
+- Increased graph samples for smoother plots.
+- Added captioned PNG export with formula, ranges, and angle mode.
+- Bumped service worker cache version.
 
 ### v2.2 calculator UX polish
 

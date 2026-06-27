@@ -5,6 +5,7 @@ import { registerServiceWorker } from './registerServiceWorker.js';
 import './styles.css';
 import './graph.css';
 import './unit.css';
+import './pwa.css';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
